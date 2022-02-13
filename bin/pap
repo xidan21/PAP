@@ -1,0 +1,306 @@
+
+import commands
+import sys
+import subprocess
+import re
+import os
+import time
+
+from Tkinter import *
+from tkFileDialog import *
+import tkMessageBox
+import Tkinter
+
+class MyCode(object):
+	def __init__(self):
+		root = Tk()
+		root.title('welcome to use P.A.P.!')
+		screen_width  = root.winfo_screenwidth()
+		screen_height = root.winfo_screenheight() 
+		
+		x = (screen_width/2) - (855/2) 
+		y = (screen_height/2) - (900/2)
+		root.geometry('%dx%d+%d+%d' % (855, 700, x, y))
+		
+		self.species_name   = StringVar()
+                self.windows_start  = StringVar()
+                self.windows_end    = StringVar()
+                self.peak_gap       = StringVar()
+                self.peak_frequency = StringVar()
+		self.contorl_group  = StringVar() 
+		self.end_group      = StringVar() 
+		self.abs_value      = IntVar()
+		self.log_value      = IntVar()
+                self.inputfile      = StringVar()
+		self.text_control   = StringVar()
+
+
+######################## title ############################
+
+		Label(root,width=10,text='P.A.P',fg='blue',font=("Helvetica", 56)).place(x=262,y=30)
+		Label(root,width=50,text='Peak Analysis Platform',fg='blue',font=("Helvetica", 16)).place(x=220,y=110)
+
+######################### load entry box ####################      
+
+                Label(root,text='Please upload your sequence file.',fg='green').place(x=326,y=190)
+                self.e = Entry(root, width=18,textvariable=self.inputfile)
+                self.e.place(x=335,y=215)
+
+                B = Button(root,text='Upload',command=self.Onload)
+                B.place(x=520,y=215)
+
+
+######################### load text box ##################
+
+                Label (root, text='Windows Start ',fg='green').place(x=265,y=285)
+                Entry (root, width=5,textvariable=self.windows_start).place(x=365,y=285)
+
+                Label (root, text='Windows End ',fg='green').place(x=440,y=285)
+                Entry (root, width=5,textvariable=self.windows_end).place(x=529,y=285)
+
+                Label (root, text='Peak Gap ',fg='green').place(x=285,y=365)
+		self.peak_gap.set('5')
+                Entry (root, width=3,textvariable=self.peak_gap).place(x=365,y=365)
+		#Label (root, text='%',fg='green').place(x=390,y=368)
+
+
+                Label (root, text='Peak frequency ',fg='green').place(x=430,y=365)
+		self.peak_frequency.set('300')
+                Entry (root, width=3,textvariable=self.peak_frequency).place(x=540,y=365)
+		#Label (root, text='%',fg='green').place(x=555,y=368)
+
+
+######################### load run button ##################
+
+		button = Button(root,text='RUN',fg="red",command=self.Run)
+		button.bind('<Return>',self.Run)
+		button.focus()
+
+		button.place(x=410,y=525)
+
+#########################upload image#####################     
+
+		image2 = PhotoImage(file="../figure/ki.gif")
+		panel_2 = Label(root, image=image2)      
+	#	panel_2.image = image2
+	#	panel_2.place(x=110,y=601)
+		panel_2.place(x=250,y=601)
+      
+		image3 = PhotoImage(file="../figure/cmm.gif")
+		panel_3 = Label(root, image=image3)      
+	#	panel_3.image = image3
+	#	panel_3.place(x=590,y=571)
+		panel_3.place(x=460,y=601)
+
+######################load menu bar#######################      
+
+		menubar = Menu(root)
+		filemenu = Menu(menubar)      
+		menubar.add_cascade(label='File', menu=filemenu)
+		filemenu.add_command(label='open...', command=self.open_as)
+      
+		helpmenu = Menu(menubar)
+		menubar.add_cascade(label="Help", menu=helpmenu)
+		helpmenu.add_command(label="About...", command=self.create_a_child_window_for_readme)
+		filemenu.add_command(label='Exit', command=root.quit)      
+		root.config(menu=menubar)
+
+	#	root.wm_attributes("-topmost", 1)
+
+		root.mainloop()
+      
+####################################################################################################   
+
+        def Onload(self):
+                self.e.delete(0, END)
+                fileName = askopenfilename(filetypes=[("Text files", "*.txt"), ("Excel files", "*.xlsx"),("Excel files", "*.xlsb"), ("Fasta files", "*.fa")])
+                self.e.insert(0, fileName)
+
+
+	def textfr_control (self, master, x_coordinate, y_coordinate):
+
+		textfr = Frame(master)
+		self.text_control = Text(textfr,height = 2,width = 50, borderwidth=2,relief = RIDGE)
+		scroll = Scrollbar(textfr)
+
+
+		self.text_control.configure(yscrollcommand = scroll.set)
+		self.text_control.pack(side = LEFT)
+		scroll.pack(side = RIGHT,fill = Y)
+
+		textfr.place(x=x_coordinate, y=y_coordinate) 
+   
+	def textfr_case (self, master, x_coordinate, y_coordinate):
+
+		textfr = Frame(master)
+		self.text_case = Text(textfr,height = 2,width = 50, borderwidth=2,relief = RIDGE)
+		scroll = Scrollbar(textfr)
+
+
+		self.text_case.configure(yscrollcommand = scroll.set)
+		self.text_case.pack(side = LEFT)
+		scroll.pack(side = RIGHT,fill = Y)
+
+		textfr.place(x=x_coordinate, y=y_coordinate) 
+
+	def create_a_child_window_for_readme(self):
+        
+		# create the root window
+		root_3 = Tk()
+		text = Text(root_3)
+        
+		# modify the window
+	#	root_3.title("READ ME")
+		root_3.title("Result")
+		root_3.geometry("1000x1000")
+        
+		myTextWidget= Text(root_3) # set up a text widget as a root (window) child
+        
+	#	myFile= file("../README") # get a file handle
+		myFile = file("../example_result/outfile")
+		myText=myFile.read() # read the file to variable
+
+		text.tag_configure("red", foreground = "#ff0000")
+
+		text.highlight_pattern("QUERY_SEQ", "red")
+
+		myFile.close() # close file handle
+        
+		myTextWidget.insert(0.0,myText) # insert the file's text into the text widget
+		myTextWidget.pack(expand=1, fill=BOTH) # show the widget
+        
+		root_3.mainloop()
+        
+	def create_a_child_window_for_result(self):
+
+		root_2 = Tk()
+
+                root_2.title("RESULT")
+                root_2.geometry("900x600")
+
+                myTextWidget= Text(root_2) # set up a text widget as a root (window) child
+
+                scrollbar_x = Scrollbar(root_2,orient=HORIZONTAL)		
+                scrollbar_x.pack(side = BOTTOM, fill = X)
+
+                scrollbar_y = Scrollbar(root_2,orient=VERTICAL)
+                scrollbar_y.pack(side = RIGHT,fill = Y)
+
+                myTextWidget.configure(xscrollcommand = scrollbar_x.set)
+                myTextWidget.configure(yscrollcommand = scrollbar_y.set)
+
+                myFile=open("../result/outputfile.txt",'r') # get a file handle
+                myText= myFile.read() # read the file to variable
+                myFile.close() # close file handle
+
+                myTextWidget.insert(0.0,myText) # insert the file's text into the text widget
+
+                myTextWidget.pack(side=TOP,expand=TRUE, fill=BOTH) # show the widget
+
+                scrollbar_x.config(command=myTextWidget.xview)
+                scrollbar_y.config(command=myTextWidget.yview)
+
+                root_2.mainloop()
+
+	def create_a_child_window(self):
+		root_local = Tk()
+		text = Text(root_local)
+        
+		root_local.title(filename)
+		root_local.geometry("900x900")
+        
+		myTextWidget= Text(root_local) # set up a text widget as a root (window) child
+        
+		myFile=file(filename) # get a file handle
+		myText= myFile.read() # read the file to variable
+		myFile.close() # close file handle
+
+		myTextWidget.insert(0.0,myText) # insert the file's text into the text widget
+      
+		myTextWidget.pack(expand=1, fill=BOTH) # show the widget
+		
+		menubar_local = Menu(root_local)
+		
+		filemenu_local = Menu(menubar_local)      
+		menubar_local.add_cascade(label="File", menu=filemenu_local)		
+		filemenu_local.add_command(label="Save...", command=self.file_save)
+		filemenu_local.add_command(label="Exit...", command=root_local.quit)
+        
+		helpmenu_local = Menu(menubar_local)		
+		menubar_local.add_cascade(label="Help", menu=helpmenu_local)
+		helpmenu_local.add_command(label="About...", command=self.create_a_child_window_for_readme)
+	
+		root_local.config(menu=menubar_local)
+		
+		root_local.mainloop()
+
+        def open_as(self):
+                fileName_2 = askopenfilename(filetypes=[("Text and Python files","*.fa *.txt *.py *.pyw"), 
+                     ("HTML files","*.htm"), 
+                     ("All files","*.*")])
+                
+                try:
+                
+                        self.create_a_child_window(fileName_2)
+                
+                except IOError:
+                
+                        from tkMessageBox import showwarning
+                        showwarning("Open", "Cannot open the file.")    
+                        raise Cancel
+                 
+        def file_save(self):
+
+                fout = asksaveasfile(mode='w', defaultextension=".txt")
+                text2save = str(self.text.get("0.0",'END'))
+                fout.write(text2save)
+                fout.close()
+	
+	def Run(self, event = None):
+
+#		os.system("rm ../source/* >> ../source/log.txt 2>&1")
+		os.system("rm ../result/*")
+
+		# for windows#
+
+                #os.system("del /Q ..\source\*.* > ..\source\log.txt")
+                #os.system("del /Q ..\result\*.* > ..\source\log.txt")
+	
+#		self.species = re.sub(" ","_",self.species_name.get())
+
+#		print self.species
+#		self.control_group = re.sub("\s+","",self.text_control.get('1.0','end-1c'))
+#		self.case_group    = re.sub("\s+","",self.text_case.get('1.0','end-1c'))
+#
+#		print self.text_control.get('1.0','end-1c')
+#		print self.text_case.get('1.0','end-1c')
+#		print self.abs_value.get()
+#		print self.log_value.get()
+
+		print
+		print "##################################################################################"
+		print "                           Welcome to use P.A.P.!"
+		print "##################################################################################"
+		print 
+		print
+		print self.peak_gap.get()
+
+		os.system("python2.7 find_peak.py %s %s %s %s > %s " %(self.inputfile.get(), self.peak_gap.get(), self.windows_start.get(), self.windows_end.get(), "../result/outputfile.txt"))
+		
+		#os.system("c:\Python27\python.exe find_peak_12.py %s %s %s %s > %s " %(self.inputfile.get(), self.peak_gap.get(), self.windows_start.get(), self.windows_end.get(), "../result/outputfile.txt"))
+
+                try:
+
+                        self.create_a_child_window_for_result()
+
+                except IOError as e:
+
+                        print 'Oh dear.'
+
+
+
+if __name__=='__main__':    
+
+	myApp = MyCode()
+
+
