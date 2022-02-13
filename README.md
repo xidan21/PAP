@@ -5,7 +5,7 @@
 Introduction
 ============
 
-PAP, (Platform of Identifying the Splicing Sites), is a software to identify the alternative splicing sites
+PAP, (Peak Annotation Platform), is a software to identify the expression peak of cell calcioum level (calcium flux data).
 
 
 
